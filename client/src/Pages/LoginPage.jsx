@@ -19,7 +19,7 @@ export default function LoginPage() {
 
   console.log('Form submitted:', formData); // Log the form data
   try {
-    const response = await axiosInstance.post('api/login', formData);
+    const response = await axiosInstance.post('auth/login', formData);
 
     console.log('Response:', response.data);  // Log the entire response
 
@@ -31,7 +31,7 @@ export default function LoginPage() {
       console.error('Token not found in the response');
     }
 
-    navigate('/students');
+    navigate('/tenants');
   } catch (err) {
     setError(err.response?.data?.error || 'Login failed');
   }

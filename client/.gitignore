@@ -1,0 +1,12 @@
+# Client specific files (React/Vite)
+node_modules/
+dist/          # Vite's default build output
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnp/
+.pnp.js
+.env           # Client-side .env file (if any, though generally not for secrets)
+.env.local
+.env.*.local
+.vite/         # Vite's cache directory

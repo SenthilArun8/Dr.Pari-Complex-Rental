@@ -1,3 +1,53 @@
+/* In your src/index.css */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* --- Custom Styles for your Calendar --- */
+
+/* Basic styling for all day cells */
+/* Target the <span> element inside your .my-custom-calendar class */
+.my-custom-calendar [data-react-aria-pressable="true"] {
+  /* You can add or override base styles here if needed,
+     but the component already has many default classes. */
+  /* For example, to ensure text color is readable by default: */
+  @apply text-emerald-900; /* Default text color for non-selected/non-hovered days */
+}
+
+/* Hover effect */
+/* Overriding data-[hover=true]:bg-primary-50 with your desired emerald */
+.my-custom-calendar [data-react-aria-pressable="true"][data-hover="true"] {
+  @apply bg-emerald-200 text-emerald-900; /* Light emerald background, dark emerald text on hover */
+}
+
+/* Selected day */
+/* Overriding data-[selected=true]:bg-primary with your desired emerald */
+.my-custom-calendar [data-react-aria-pressable="true"][data-selected="true"] {
+  @apply bg-emerald-700 text-white font-bold; /* Dark emerald background, white text for selected */
+}
+
+/* Today's date (if it's not the selected date) */
+.my-custom-calendar [data-react-aria-pressable="true"][data-today="true"]:not([data-selected="true"]) {
+  @apply border-2 border-emerald-500; /* Add a border around today's date */
+}
+
+/* Optional: Style for disabled/unavailable days */
+.my-custom-calendar [data-react-aria-pressable="true"][data-disabled="true"],
+.my-custom-calendar [data-react-aria-pressable="true"][data-unavailable="true"] {
+  @apply text-gray-400 cursor-not-allowed opacity-50; /* Lighter text, no pointer, faded */
+}
+
+/* --- Optional: Styling for Navigation Arrows/Month Year Display --- */
+/* You'll need to inspect these elements to find their specific classes/attributes
+   if you want to customize them. They are likely not using data-react-aria-pressable. */
+
+/* Example (Hypothetical selector for navigation arrows/buttons): */
+.my-custom-calendar .react-aria-Calendar-navButton { /* Inspect to find actual class */
+  @apply p-2 rounded hover:bg-emerald-100;
+}
+
+/* Example (Hypothetical selector for month/year title): */
+.my-custom-calendar .react-aria-Calendar-title { /* Inspect to find actual class */
+  @apply text-xl font-semibold text-emerald-800;
+}

@@ -2,7 +2,8 @@
 import express from 'express';
 import cors from 'cors';
 import authRoutes from './src/routes/authRoutes.js';
-import { errorHandler } from './src/middleware/errorHandler.js'; // Assuming you create this
+import tenantRoutes from './src/routes/tenantRoutes.js'; 
+import { errorHandler } from './src/middleware/errorHandler.js'; 
 
 const app = express();
 
@@ -16,8 +17,8 @@ app.get('/', (req, res) => {
 });
 
 // Mount API routes
-app.use('/api/auth', authRoutes); // e.g., /api/auth/register, /api/auth/login
-// app.use('/api/students', studentRoutes); // e.g., /api/students, /api/students/:id
+app.use('/auth', authRoutes); // e.g., /api/auth/register, /api/auth/login
+app.use('/tenants', tenantRoutes); // <--- Mount tenant routes here (e.g., /tenants)
 // app.use('/api/ai', aiRoutes); // e.g., /api/ai/generate
 
 // Centralized Error Handling Middleware (must be last middleware)

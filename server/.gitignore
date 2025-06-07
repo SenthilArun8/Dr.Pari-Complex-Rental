@@ -1,0 +1,9 @@
+# Server specific files (Node.js/Express)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnp/
+.pnp.js
+.env           # CRITICAL: Contains sensitive information like JWT_SECRET, DB_URL
+coverage/      # If you run backend tests with coverage reports

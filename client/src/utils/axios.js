@@ -1,11 +1,11 @@
 import axios from 'axios';
 
-const baseURL = import.meta.env.PROD
-  ? 'https://daycare-ai-activity-suggestions-backend.onrender.com'
-  : 'https://daycare-ai-activity-suggestions-backend.onrender.com';
+// const baseURL = import.meta.env.PROD
+//   ? 'http://localhost:5000/auth'
+//   : 'http://localhost:5000/auth';
 
 const axiosInstance = axios.create({
-  baseURL,
+  baseURL : '/api',
   headers: {
     'Content-Type': 'application/json',
   }

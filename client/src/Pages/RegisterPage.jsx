@@ -24,7 +24,7 @@ export default function RegisterPage() {
     }
 
     try {
-      const response = await axiosInstance.post('/register', {
+      const response = await axiosInstance.post('auth/register', {
         name: formData.name,
         email: formData.email,
         password: formData.password
@@ -48,7 +48,7 @@ export default function RegisterPage() {
     <div className="min-h-screen flex items-center justify-center bg-[#f5f0e6]">
       <div className="w-full max-w-md p-8 backdrop-blur-md bg-white/60 rounded-xl shadow-lg">
         <div className="flex flex-col items-center">
-          <img alt="Your Company" src="arts_craft.ico" className="h-10 w-auto" />
+          {/* <img alt="" src="" className="h-10 w-auto" /> */}
           <h2 className="mt-6 text-center text-2xl font-bold text-emerald-800">
             Create your account
           </h2>
