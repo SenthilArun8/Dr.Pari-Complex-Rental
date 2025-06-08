@@ -26,6 +26,16 @@ const AddTenantPage = () => { // Changed prop name to reflect tenant context
   const [calendarFocusedDate, setCalendarFocusedDate] = useState(null);
   const [rentalPaymentDate, setRentalPaymentDate] = useState('');
   const [rentAmount, setRentAmount] = useState('');
+  const [monthlyRentPaidAmount1, setMonthlyRentPaidAmount1] = useState('');
+  const [monthlyRentPaidAmount2 , setMonthlyRentPaidAmount2] = useState('');
+  const [monthlyRentPaidDate1, setMonthlyRentPaidDate1] = useState('');
+  const [monthlyRentPaidDate2, setMonthlyRentPaidDate2] = useState('');
+  const [isMonthlyRentPaidDate1Invalid, setIsMonthlyRentPaidDate1Invalid] = useState(false);
+  const [isMonthlyRentPaidDate2Invalid, setIsMonthlyRentPaidDate2Invalid] = useState(false);
+  const [balanceAmountPending, setBalanceAmountPending] = useState('');
+  const [TNEBNumber, setTNEBNumber] = useState('');
+  const [rentIncrementDate, setRentIncrementDate] = useState('');
+  const [isRentIncrementDateInvalid, setIsRentIncrementDateInvalid] = useState(false)
 
   // --- Context and Navigation ---
   const { user, token } = useUser();
@@ -33,7 +43,9 @@ const AddTenantPage = () => { // Changed prop name to reflect tenant context
 
   // NEW: Create a ref for the Calendar component
   const calendarRef = useRef(null);
-
+  const rentIncrementCalendarRef = useRef(null); // Ref for rent increment date calendar
+  const monthlyRentPaidCalendarRef1 = useRef(null); // Ref for monthly rent paid date 1 calendar
+  const monthlyRentPaidCalendarRef2 = useRef(null); // Ref for monthly rent paid date 2 calendar
 
   // Redirect to login if not logged in
   useEffect(() => {
@@ -42,7 +54,7 @@ const AddTenantPage = () => { // Changed prop name to reflect tenant context
     }
   }, [user, token, navigate]);
 
-  // Initialize calendarFocusedDate when the component mounts or advancePayDate changes
+  /// Initialize calendarFocusedDate when the component mounts or advancePayDate changes
     // This ensures the calendar starts on the month of the initial advancePayDate if one exists.
     useEffect(() => {
         const initialParsedDate = getCalendarValue(advancePayDate);
@@ -50,6 +62,30 @@ const AddTenantPage = () => { // Changed prop name to reflect tenant context
             setCalendarFocusedDate(initialParsedDate);
         }
     }, []); // Run once on mount to set initial focus
+
+  // Debugging useEffect for advancePayDate state changes
+  useEffect(() => {
+    console.log("Current advancePayDate state:", advancePayDate);
+  }, [advancePayDate]);
+
+    // Calculate rent increment date based on advancePayDate
+    useEffect(() => {
+        if (advancePayDate) {
+            try {
+                const parsedAdvanceDate = parseDate(advancePayDate);
+                // Add exactly two years to the advancePayDate
+                const incrementDate = parsedAdvanceDate.add({ years: 2 });
+                setRentIncrementDate(incrementDate.toString());
+                setIsRentIncrementDateInvalid(false);
+            } catch (error) {
+                console.error("Error calculating rent increment date:", error);
+                setRentIncrementDate('');
+                setIsRentIncrementDateInvalid(true);
+            }
+        } else {
+            setRentIncrementDate('');
+        }
+    }, [advancePayDate])
 
   // Debugging useEffect for advancePayDate state changes
   useEffect(() => {
@@ -73,6 +109,46 @@ const AddTenantPage = () => { // Changed prop name to reflect tenant context
     }
   };
 
+  // Calculate rent increment date based on advancePayDate
+    useEffect(() => {
+        if (advancePayDate) {
+            try {
+                const parsedAdvanceDate = parseDate(advancePayDate);
+                // Add exactly two years to the advancePayDate
+                const incrementDate = parsedAdvanceDate.add({ years: 2 });
+                setRentIncrementDate(incrementDate.toString());
+                setIsRentIncrementDateInvalid(false);
+            } catch (error) {
+                console.error("Error calculating rent increment date:", error);
+                setRentIncrementDate('');
+                setIsRentIncrementDateInvalid(true);
+            }
+        } else {
+            setRentIncrementDate('');
+        }
+    }, [advancePayDate]);
+
+
+    // Debugging useEffect for advancePayDate state changes
+    useEffect(() => {
+        console.log("Current advancePayDate state:", advancePayDate);
+    }, [advancePayDate]);
+
+    // Auto-calculate Balance Amount Pending
+    useEffect(() => {
+        const rent = parseFloat(rentAmount);
+        const paid1 = parseFloat(monthlyRentPaidAmount1);
+        const paid2 = parseFloat(monthlyRentPaidAmount2) || 0;
+
+        if (!isNaN(rent) && !isNaN(paid1)) {
+            setBalanceAmountPending((rent - (paid1 + paid2)).toFixed(2)); // Format to 2 decimal places
+        } else {
+            setBalanceAmountPending(''); // Clear if inputs are not valid numbers
+        }
+    }, [rentAmount, monthlyRentPaidAmount1, monthlyRentPaidAmount2]); // Recalculate when rentAmount or monthlyRentPaidAmount changes
+
+
+
   const toIsoDateString = (dateValue) => {
     if (!dateValue) {
         console.log("toIsoDateString: dateValue is null/undefined, returning empty string.");
@@ -82,54 +158,71 @@ const AddTenantPage = () => { // Changed prop name to reflect tenant context
     return dateValue.toString();
   };
 
-  // NEW: Handler for when the date input field loses focus
-   const handleDateInputBlur = (e) => {
-    const typedDateString = e.target.value;
+  // Handler for when the advancePayDate input field loses focus
+    const handleAdvancePayDateInputBlur = (e) => {
+        const typedDateString = e.target.value;
 
-    if (typedDateString === '') {
-        setAdvancePayDate('');
-        setIsAdvancePayDateInvalid(false);
-        setCalendarFocusedDate(null); // Reset calendar focus if input is empty
-        return;
-    }
-
-    try {
-        const parsedDate = parseDate(typedDateString);
-        setAdvancePayDate(parsedDate.toString());
-        setIsAdvancePayDateInvalid(false);
-
-        // --- CRITICAL CHANGE: Imperative Navigation via Ref ---
-        if (calendarRef.current) {
-            // Attempt to use focusDate if available (common for React Aria based components)
-            if (typeof calendarRef.current.focusDate === 'function') {
-                console.log("Attempting to focus calendar via ref.focusDate:", parsedDate);
-                calendarRef.current.focusDate(parsedDate);
-            }
-            // Fallback to setDate if focusDate is not present
-            else if (typeof calendarRef.current.setDate === 'function') {
-                console.log("Attempting to focus calendar via ref.setDate:", parsedDate);
-                calendarRef.current.setDate(parsedDate);
-            }
-            // If neither specific method exists, update the state that the calendar consumes
-            // This is a more reactive approach if direct imperative methods aren't exposed
-            else {
-                 console.log("Direct calendar ref method not found, updating calendarFocusedDate state.");
-                 setCalendarFocusedDate(parsedDate);
-            }
-        } else {
-            // If ref is not yet available, still update the state;
-            // this handles the initial render case or if ref is null for some reason.
-            setCalendarFocusedDate(parsedDate);
+        if (typedDateString === '') {
+            setAdvancePayDate('');
+            setIsAdvancePayDateInvalid(false);
+            setCalendarFocusedDate(null);
+            return;
         }
-        // --- END CRITICAL CHANGE ---
 
-    } catch (error) {
-        console.error("Invalid date typed:", typedDateString, error);
-        toast.error('Invalid date format. Please use YYYY-MM-DD (e.g., 2025-01-31).');
-        setIsAdvancePayDateInvalid(true);
-        setCalendarFocusedDate(null); // Clear calendar focus if date is invalid
-    }
-};
+        try {
+            const parsedDate = parseDate(typedDateString);
+            setAdvancePayDate(parsedDate.toString());
+            setIsAdvancePayDateInvalid(false);
+
+            if (calendarRef.current) {
+                if (typeof calendarRef.current.focusDate === 'function') {
+                    console.log("Attempting to focus calendar via ref.focusDate:", parsedDate);
+                    calendarRef.current.focusDate(parsedDate);
+                } else if (typeof calendarRef.current.setDate === 'function') {
+                    console.log("Attempting to focus calendar via ref.setDate:", parsedDate);
+                    calendarRef.current.setDate(parsedDate);
+                } else {
+                    console.log("Direct calendar ref method not found, updating calendarFocusedDate state.");
+                    setCalendarFocusedDate(parsedDate);
+                }
+            } else {
+                setCalendarFocusedDate(parsedDate);
+            }
+        } catch (error) {
+            console.error("Invalid date typed:", typedDateString, error);
+            toast.error('Invalid date format for Advance Pay Date. Please use YYYY-MM-DD (e.g., 2025-01-31).');
+            setIsAdvancePayDateInvalid(true);
+            setCalendarFocusedDate(null);
+        }
+    };
+
+    // Function to handle blur for any monthly rent paid date input
+    const handleMonthlyRentPaidDateInputBlur = (e, setDateState, setIsInvalidState) => {
+        const typedDateString = e.target.value;
+
+        if (typedDateString === '') {
+            setDateState('');
+            setIsInvalidState(false);
+            return;
+        }
+
+        try {
+            const parsedDate = parseDate(typedDateString);
+            setDateState(parsedDate.toString());
+            setIsInvalidState(false);
+            // You might want to update the calendar's focused date here too if you link a calendar to this input
+            // For example, if you had a ref specific to monthlyRentPaidCalendarRef1 or monthlyRentPaidCalendarRef2
+            // if (monthlyRentPaidCalendarRef.current && typeof monthlyRentPaidCalendarRef.current.focusDate === 'function') {
+            //     monthlyRentPaidCalendarRef.current.focusDate(parsedDate);
+            // }
+        } catch (error) {
+            console.error("Invalid date typed:", typedDateString, error);
+            toast.error('Invalid date format for Monthly Rent Paid Date. Please use YYYY-MM-DD (e.g., 2025-01-31).');
+            setIsInvalidState(true);
+        }
+    };
+
+
 
   // --- Form Submission Handler ---
   const submitForm = async (e) => { // Made async to directly use await
@@ -146,9 +239,9 @@ const AddTenantPage = () => { // Changed prop name to reflect tenant context
     // const userId = JSON.parse(atob(token.split('.')[1])).id;
 
     const newTenant = {
+      shopName,
       shopNumber,
       shopFacing,
-      shopName,
       floorNumber: Number(floorNumber), // Ensure number type for schema
       tenantName,
       tenantAddress,
@@ -158,6 +251,13 @@ const AddTenantPage = () => { // Changed prop name to reflect tenant context
       advancePayDate, // Date string will be parsed by Mongoose
       rentalPaymentDate: Number(rentalPaymentDate), // Ensure number type for schema
       rentAmount: Number(rentAmount), // Ensure number type for schema
+      monthlyRentPaidAmount1: Number(monthlyRentPaidAmount1),
+      monthlyRentPaidAmount2: Number(monthlyRentPaidAmount2),
+      monthlyRentPaidDate1,
+      monthlyRentPaidDate2,
+      balanceAmountPending: Number(balanceAmountPending),
+      TNEBNumber,
+      rentIncrementDate
       // No need to manually add `user` field here, as your backend's `protect` middleware
       // will attach `req.user._id` before saving to the database.
       // If `req.user._id` is not set by middleware, you might need `user: userId` here.
@@ -190,6 +290,13 @@ const AddTenantPage = () => { // Changed prop name to reflect tenant context
     { key: 'advancePayDate', label: 'Advance Pay Date', description: 'Select the date the advance payment was received.' },
     { key: 'rentalPaymentDate', label: 'Payment Due Date', description: 'Enter the day of the month rent is due (e.g., 1 for 1st).' },
     { key: 'rentAmount', label: 'Monthly Rent', description: 'Enter the monthly rent amount.' },
+    { key: 'monthlyRentPaidAmount1', label: 'Monthly Rent Paid Amount 1', description: 'Enter the rent amount paid for the current month.' },
+    { key: 'monthlyRentPaidAmount2', label: 'Monthly Rent Paid Amount 2', description: 'Enter the rent amount paid for the current month if not paid in full' },
+    { key: 'monthlyRentPaidDate1', label: 'Monthly Rent Paid Date 1', description: 'Select the date the first monthly rent was paid.' },
+    { key: 'monthlyRentPaidDate2', label: 'Monthly Rent Paid Date 2', description: 'Select the date the second monthly rent was paid.' },
+    { key: 'balanceAmountPending', label: 'Balance Amount Pending', description: 'Enter any outstanding balance amount for rent.' },
+    { key: 'TNEBNumber', label: 'TNEB Number', description: 'Enter the Tamil Nadu Electricity Board (TNEB) customer number for the shop.' },
+    { key: 'rentIncrementDate', label: 'Rent Increment Date', description: 'This date is automatically calculated as two years after the Advance Payment Date.' },
   ];
 
   const [tutorialStep, setTutorialStep] = useState(0);
@@ -428,7 +535,7 @@ const AddTenantPage = () => { // Changed prop name to reflect tenant context
               setIsAdvancePayDateInvalid(false);
             }
           }}
-          onBlur={handleDateInputBlur}
+          onBlur={handleAdvancePayDateInputBlur}
         />
       </div>
     </div>
@@ -450,13 +557,13 @@ const AddTenantPage = () => { // Changed prop name to reflect tenant context
             />
           </div>
 
-          <div className={`mb-4 relative ${isSpotlight('rentAmount') ? 'ring-4 ring-emerald-400 z-50 bg-white p-1' : ''}`}>
+        <div className={`mb-4 relative ${isSpotlight('rentAmount') ? 'ring-4 ring-emerald-400 z-50 bg-white p-1' : ''}`}>
             {isSpotlight('rentAmount') && showTutorial && <TutorialTooltip step={tutorialStep} />}
             <label className="block text-emerald-900 font-bold mb-2">Monthly Rent Amount</label>
             <input
               type="number"
               className="border border-emerald-300 rounded w-full py-2 px-3"
-              placeholder="e.g. 1200"
+              placeholder="e.g. ₹1200"
               value={rentAmount}
               onChange={(e) => setRentAmount(e.target.value)}
               required
@@ -464,6 +571,173 @@ const AddTenantPage = () => { // Changed prop name to reflect tenant context
               onFocus={() => handleSpotlightFocus('rentAmount')}
             />
           </div>
+
+          {/* NEW: Monthly Rent Paid Amount */}
+        <div className={`mb-4 relative ${isSpotlight('monthlyRentPaidAmount1') ? 'ring-4 ring-emerald-400 z-50 bg-white p-1' : ''}`}>
+            {isSpotlight('monthlyRentPaidAmount1') && showTutorial && <TutorialTooltip step={tutorialStep} />}
+            <label className="block text-emerald-900 font-bold mb-2">Monthly Rent Paid Amount 1</label>
+            <input
+                type="number"
+                className="border border-emerald-300 rounded w-full py-2 px-3"
+                placeholder="e.g. ₹1200"
+                value={monthlyRentPaidAmount1}
+                onChange={(e) => setMonthlyRentPaidAmount1(e.target.value)}
+                required
+                min="0"
+                onFocus={() => handleSpotlightFocus('monthlyRentPaidAmount1')}
+            />
+        </div>
+
+        <div className={`mb-4 relative ${isSpotlight('monthlyRentPaidAmount2') ? 'ring-4 ring-emerald-400 z-50 bg-white p-1' : ''}`}>
+            {isSpotlight('monthlyRentPaidAmount2') && showTutorial && <TutorialTooltip step={tutorialStep} />}
+            <label className="block text-emerald-900 font-bold mb-2">Monthly Rent Paid Amount 2</label>
+            <input
+                type="number"
+                className="border border-emerald-300 rounded w-full py-2 px-3"
+                placeholder="e.g. ₹1200"
+                value={monthlyRentPaidAmount2}
+                onChange={(e) => setMonthlyRentPaidAmount2(e.target.value)}
+                required
+                min="0"
+                onFocus={() => handleSpotlightFocus('monthlyRentPaidAmount2')}
+            />
+        </div>
+
+            {/* NEW: Monthly Rent Paid Date */}
+            <div className={`mb-4 relative ${isSpotlight('monthlyRentPaidDate1') ? 'ring-4 ring-emerald-400 z-50 bg-white p-1' : ''}`}>
+                {isSpotlight('monthlyRentPaidDate1') && showTutorial && <TutorialTooltip step={tutorialStep} />}
+                <label className="block text-emerald-900 font-bold mb-2">Monthly Rent Paid Date 1</label>
+                <Calendar
+                    aria-label="Monthly Rent Paid Date 1"
+                    value={getCalendarValue(monthlyRentPaidDate1)}
+                    onChange={(dateValue) => {
+                        const newDateString = toIsoDateString(dateValue);
+                        setMonthlyRentPaidDate1(newDateString);
+                        setIsMonthlyRentPaidDate1Invalid(false);
+                    }}
+                    className="my-custom-calendar"
+                    style={{ border: '1px solid #ccc', borderRadius: '4px' }}
+                    focusedDate={getCalendarValue(monthlyRentPaidDate1)}
+                    ref={monthlyRentPaidCalendarRef1}
+                />
+                <div className="mt-4">
+                    <label className="block text-emerald-900 font-bold mb-2">Or Type Date Manually (YYYY-MM-DD):</label>
+                    <input
+                        type="text"
+                        className={`border rounded w-full py-2 px-3 ${isMonthlyRentPaidDate1Invalid ? 'border-red-500' : 'border-emerald-300'}`}
+                        placeholder="YYYY-MM-DD"
+                        value={monthlyRentPaidDate1}
+                        onChange={(e) => {
+                            setMonthlyRentPaidDate1(e.target.value);
+                            if (isMonthlyRentPaidDate1Invalid) {
+                                setIsMonthlyRentPaidDate1Invalid(false);
+                            }
+                        }}
+                        onBlur={handleMonthlyRentPaidDateInputBlur}
+                        onFocus={() => handleSpotlightFocus('monthlyRentPaidDate1')}
+                    />
+                    {isMonthlyRentPaidDate1Invalid && <p className="text-red-500 text-sm mt-1">Invalid date format.</p>}
+                </div>
+            </div>
+
+            <div className={`mb-4 relative ${isSpotlight('monthlyRentPaidDate2') ? 'ring-4 ring-emerald-400 z-50 bg-white p-1' : ''}`}>
+                {isSpotlight('monthlyRentPaidDate2') && showTutorial && <TutorialTooltip step={tutorialStep} />}
+                <label className="block text-emerald-900 font-bold mb-2">Monthly Rent Paid Date 2</label>
+                <Calendar
+                    aria-label="Monthly Rent Paid Date 2"
+                    value={getCalendarValue(monthlyRentPaidDate2)}
+                    onChange={(dateValue) => {
+                        const newDateString = toIsoDateString(dateValue);
+                        setMonthlyRentPaidDate2(newDateString);
+                        setIsMonthlyRentPaidDate2Invalid(false);
+                    }}
+                    className="my-custom-calendar"
+                    style={{ border: '1px solid #ccc', borderRadius: '4px' }}
+                    focusedDate={getCalendarValue(monthlyRentPaidDate2)}
+                    ref={monthlyRentPaidCalendarRef2}
+                />
+                <div className="mt-4">
+                    <label className="block text-emerald-900 font-bold mb-2">Or Type Date Manually (YYYY-MM-DD):</label>
+                    <input
+                        type="text"
+                        className={`border rounded w-full py-2 px-3 ${isMonthlyRentPaidDate2Invalid ? 'border-red-500' : 'border-emerald-300'}`}
+                        placeholder="YYYY-MM-DD"
+                        value={monthlyRentPaidDate2}
+                        onChange={(e) => {
+                            setMonthlyRentPaid2Date(e.target.value);
+                            if (isMonthlyRentPaidDate2Invalid) {
+                                setIsMonthlyRentPaidDate2Invalid(false);
+                            }
+                        }}
+                        onBlur={handleMonthlyRentPaidDateInputBlur}
+                        onFocus={() => handleSpotlightFocus('monthlyRentPaidDate2')}
+                    />
+                    {isMonthlyRentPaidDate2Invalid && <p className="text-red-500 text-sm mt-1">Invalid date format.</p>}
+                </div>
+            </div>
+
+            {/* Balance Amount Pending (Now Auto-calculated and Read-Only) */}
+            <div className={`mb-4 relative ${isSpotlight('balanceAmountPending') ? 'ring-4 ring-emerald-400 z-50 bg-white p-1' : ''}`}>
+                {isSpotlight('balanceAmountPending') && showTutorial && <TutorialTooltip step={tutorialStep} />}
+                <label className="block text-emerald-900 font-bold mb-2">Balance Amount Pending</label>
+                <input
+                    type="number"
+                    className="border border-emerald-300 rounded w-full py-2 px-3 bg-gray-100 cursor-not-allowed" // Added styles for read-only
+                    placeholder="Auto-calculated"
+                    value={balanceAmountPending}
+                    readOnly //  <--- THIS IS KEY: Makes the input uneditable by the user
+                    onFocus={() => handleSpotlightFocus('balanceAmountPending')}
+                />
+                <p className="text-sm text-gray-600 mt-1">Automatically calculated as (Monthly Rent - Monthly Rent Paid).</p>
+            </div>
+
+            {/* ADDITIONAL INFORMATION */}
+            <h3 className="text-2xl mt-6 mb-4 text-emerald-800">Additional Information</h3>
+            {/* NEW: TNEB Number */}
+            <div className={`mb-4 relative ${isSpotlight('TNEBNumber') ? 'ring-4 ring-emerald-400 z-50 bg-white p-1' : ''}`}>
+                {isSpotlight('TNEBNumber') && showTutorial && <TutorialTooltip step={tutorialStep} />}
+                <label className="block text-emerald-900 font-bold mb-2">TNEB (Tamil Nadu Electricity Board) Number: </label>
+                <input
+                    type="text" // TNEB number might contain letters, so keeping it as text
+                    className="border border-emerald-300 rounded w-full py-2 px-3"
+                    placeholder="e.g. 01234567890"
+                    value={TNEBNumber}
+                    onChange={(e) => setTNEBNumber(e.target.value)}
+                    onFocus={() => handleSpotlightFocus('TNEBNumber')}
+                />
+            </div>
+
+           <div className={`mb-4 relative ${isSpotlight('rentIncrementDate') ? 'ring-4 ring-emerald-400 z-50 bg-white p-1' : ''}`}>
+             {isSpotlight('rentIncrementDate') && showTutorial && <TutorialTooltip step={tutorialStep} />}
+             <label className="block text-emerald-900 font-bold mb-2">Rent Increment Notification Date (Auto-calculated)</label>
+             <Calendar
+                 aria-label="Rent Increment Date"
+                 value={getCalendarValue(rentIncrementDate)}
+                 onChange={(dateValue) => {
+                     // This calendar is primarily for display; direct editing is via input
+                     const newDateString = toIsoDateString(dateValue);
+                     setRentIncrementDate(newDateString);
+                 }}
+                 className="my-custom-calendar"
+                 style={{ border: '1px solid #ccc', borderRadius: '4px' }}
+                 focusedDate={getCalendarValue(rentIncrementDate)} // Focus on the calculated date
+                 ref={rentIncrementCalendarRef}
+                 isReadOnly // Make calendar read-only as it's auto-calculated
+             />
+             <div className="mt-4">
+                 <label className="block text-emerald-900 font-bold mb-2">Calculated Date (YYYY-MM-DD):</label>
+                 <input
+                     type="text"
+                     className={`border rounded w-full py-2 px-3 ${isRentIncrementDateInvalid ? 'border-red-500' : 'border-emerald-300'}`}
+                     value={rentIncrementDate}
+                     readOnly // Make the input read-only
+                     onFocus={() => handleSpotlightFocus('rentIncrementDate')}
+                 />
+                 {isRentIncrementDateInvalid && <p className="text-red-500 text-sm mt-1">Cannot calculate. Please check Advance Pay Date.</p>}
+             </div>
+           </div>
+
+          
 
           <div>
             <button

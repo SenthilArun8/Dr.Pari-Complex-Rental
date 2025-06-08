@@ -6,6 +6,8 @@ const Footer = () => {
     address: '123 Childcare Lane, Kidstown, ON L1R 2W3',
     phone: '(###) ###-####',
     email: 'info@paricomplex.ca',
+    type: 'Partnership',
+    owners: "Dr. Pari, P. Prabavathy, Dr. P Anitha, and Dr. P Vidhya",
     // Google Maps Embed URL - IMPORTANT: Steps
     // To get this:
     // 1. Go to Google Maps (maps.google.com)
@@ -26,6 +28,7 @@ const Footer = () => {
           <p className="mb-2">{business.address}</p>
           <p className="mb-2">Phone: <a href={`tel:${business.phone}`} className="hover:text-[#FFBBA6]">{business.phone}</a></p>
           <p className="mb-2">Email: <a href={`mailto:${business.email}`} className="hover:text-[#FFBBA6]">{business.email}</a></p>
+          <p className="mb-2">{business.type + ": " + business.owners}</p>
         </div>
 
         {/* Quick Links (Optional - adjust as needed) */}
@@ -66,7 +69,7 @@ const Footer = () => {
 
       </div>
       <div className="mt-10 pt-6 border-t border-[#294122] text-center text-sm text-[#FFEDD2] opacity-75">
-        &copy; {new Date().getFullYear()} {business.name}. All rights reserved.
+        &copy; {new Date().getFullYear()} {business.name}. All rights reserved. Developed by Senthil Kirthieswar
       </div>
     </footer>
   );

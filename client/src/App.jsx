@@ -8,6 +8,8 @@ import NotFoundPage from './Pages/NotFoundPage';
 import RegisterPage from './Pages/RegisterPage';
 import TenantsPage from './Pages/TenantsPage';
 import AddTenantPage from './Pages/AddTenantPage'
+import TaxFormPage from './Pages/TaxFormPage'
+import TenantPage, { tenantLoader } from './Pages/TenantPage';
 
 
 
@@ -22,6 +24,8 @@ function App() {
         <Route path='/register' element={<RegisterPage/>}/>
         <Route path='/tenants' element={<TenantsPage/>}/>
         <Route path='/add-tenant' element={<AddTenantPage/>}/>
+        <Route path='/tax-form/:id' element={<TaxFormPage/>}/>
+        <Route path='/tenants/:id' element={<TenantPage/>} loader={tenantLoader} />
       </Route>
     )
   )

@@ -6,24 +6,67 @@ import Tenant from '../models/Tenant.js';
 // @route   POST /api/tenants
 // @access  Private/Admin
 export const createTenant = asyncHandler(async (req, res) => {
-  const { name, email, phone, propertyUnit, leaseStartDate, leaseEndDate, rentAmount } = req.body;
+  const {
+        shopName,
+        shopNumber,
+        shopFacing,
+        floorNumber,
+        tenantName,
+        tenantAddress,
+        tenantPhoneNumber,
+        tenantEmail,
+        advancePay,
+        advancePayDate,
+        rentalPaymentDate,
+        rentAmount,
+        monthlyRentPaidAmount1,
+        monthlyRentPaidAmount2,
+        monthlyRentPaidDate1,  
+        monthlyRentPaidDate2,  
+        balanceAmountPending, 
+        TNEBNumber,           
+        rentIncrementDate     
+    } = req.body;
 
   // Basic validation
-  if (!name || !propertyUnit || !rentAmount) {
+  if (!shopName ||
+        !shopNumber ||
+        !shopFacing ||
+        floorNumber === undefined || // Check for undefined as 0 is a valid floor
+        !tenantName ||
+        !tenantAddress ||
+        !tenantPhoneNumber ||
+        !advancePay ||
+        !advancePayDate ||
+        !rentalPaymentDate ||
+        !rentAmount
+        ) {
     res.status(400);
     throw new Error('Please enter all required tenant fields.');
   }
 
   // Create tenant in database
   const tenant = await Tenant.create({
-    name,
-    email,
-    phone,
-    propertyUnit,
-    leaseStartDate,
-    leaseEndDate,
-    rentAmount,
-    user: req.user._id // Assign tenant to the admin user who created it, if applicable
+      user: req.user._id,
+      shopName,
+      shopNumber,
+      shopFacing,
+      floorNumber,
+      tenantName,
+      tenantAddress,
+      tenantPhoneNumber,
+      tenantEmail,
+      advancePay,
+      advancePayDate, // Date string will be parsed by Mongoose
+      rentalPaymentDate: Number(rentalPaymentDate), // Ensure number type for schema
+      rentAmount: Number(rentAmount), // Assign tenant to the admin user who created it, if applicable
+      monthlyRentPaidAmount1: Number(monthlyRentPaidAmount1), // New: Ensure number type
+      monthlyRentPaidAmount2: Number(monthlyRentPaidAmount2), // New: Ensure number type
+      monthlyRentPaidDate1,                        // New: Date string will be parsed
+      monthlyRentPaidDate2,                        // New: Date string will be parsed
+      balanceAmountPending: Number(balanceAmountPending), // New: Ensure number type
+      TNEBNumber,                                 // New
+      rentIncrementDate 
   });
 
   if (tenant) {
@@ -48,6 +91,8 @@ export const getAllTenants = asyncHandler(async (req, res) => {
 // @access  Private/Admin
 export const getTenantById = asyncHandler(async (req, res) => {
   const tenant = await Tenant.findById(req.params.id);
+
+  console.log(req);
 
   if (!tenant) {
     res.status(404);

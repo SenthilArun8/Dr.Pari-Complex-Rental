@@ -10,6 +10,11 @@ const tenantSchema = new mongoose.Schema( {
     },
 
     // --- Shop Details ---
+    shopName: {
+      type: String,
+      required: [true, 'Please specify shop Name (e.g. The Coffee Bean)'],
+      trim: true,
+    },
     shopNumber: {
       type: String,
       required: [true, 'Please add a shop number'],
@@ -72,6 +77,42 @@ const tenantSchema = new mongoose.Schema( {
       type: Number,
       required: [true, 'Please add the monthly rent amount'],
       min: 0,
+    },
+    monthlyRentPaidAmount1: {
+      type: Number,
+      required: [true, 'Please enter the monthly rent paid amount'],
+      min: 0,
+      default: 0, // Default to 0 if not provided
+    },
+    monthlyRentPaidAmount2: {
+      type: Number,
+      required: [true, 'Please enter the monthly rent paid amount'],
+      min: 0,
+      default: 0, // Default to 0 if not provided
+    },
+    monthlyRentPaidDate1: {
+      type: Date,
+      // Not required initially if no payment has been made yet
+    },
+    monthlyRentPaidDate2: {
+      type: Date,
+      // Not required initially if no payment has been made yet
+    },
+    balanceAmountPending: {
+      type: Number,
+      required: false, // This will be calculated on the frontend, so not strictly required by the schema on creation
+      default: 0, // Default to 0
+    },
+
+    // --- Additional Information ---
+    TNEBNumber: { // Tamil Nadu Electricity Board (TNEB) customer number
+      type: String,
+      trim: true,
+      // Add a regex for TNEB number format if there's a specific pattern
+    },
+    rentIncrementDate: { // Auto-calculated based on advancePayDate
+      type: Date,
+      // Not strictly required as it's derived, but good to store
     },
   },
   {

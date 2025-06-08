@@ -5,5 +5,5 @@ yarn-debug.log*
 yarn-error.log*
 .pnp/
 .pnp.js
-.env           # CRITICAL: Contains sensitive information like JWT_SECRET, DB_URL
-coverage/      # If you run backend tests with coverage reports
+.env          
+coverage/      
