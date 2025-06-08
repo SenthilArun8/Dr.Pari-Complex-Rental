@@ -3,6 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import authRoutes from './src/routes/authRoutes.js';
 import tenantRoutes from './src/routes/tenantRoutes.js'; 
+import vacantShopRoutes from './src/routes/vacantShopRoute.js'
 import { errorHandler } from './src/middleware/errorHandler.js'; 
 
 const app = express();
@@ -19,6 +20,7 @@ app.get('/', (req, res) => {
 // Mount API routes
 app.use('/auth', authRoutes); // e.g., /api/auth/register, /api/auth/login
 app.use('/tenants', tenantRoutes); // <--- Mount tenant routes here (e.g., /tenants)
+app.use('/vacant-shops', vacantShopRoutes);
 // app.use('/api/ai', aiRoutes); // e.g., /api/ai/generate
 
 // Centralized Error Handling Middleware (must be last middleware)

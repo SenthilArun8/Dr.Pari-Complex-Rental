@@ -1,4 +1,3 @@
-// server/src/middleware/authMiddleware.js
 import jwt from 'jsonwebtoken';
 import asyncHandler from 'express-async-handler';
 import User from '../models/User.js'; // Assuming your user model is named 'User'
@@ -41,14 +40,23 @@ const protect = asyncHandler(async (req, res, next) => {
   }
 });
 
-// Optional: Middleware to check if user is admin
-const admin = (req, res, next) => {
-  if (req.user && req.user.isAdmin) { // Assuming your User model has an 'isAdmin' field
-    next();
-  } else {
-    res.status(403); // Forbidden
-    throw new Error('Not authorized as an admin');
-  }
+// RENAMED: 'admin' to 'authorize'
+// This middleware now acts as your role-based authorization check
+const authorize = (roles) => { // Modified to accept roles as an array
+    return (req, res, next) => {
+        if (!req.user) { // If protect middleware failed to attach user
+            res.status(401);
+            throw new Error('Not authorized, no user found for authorization check');
+        }
+        // Ensure roles is an array for includes() to work correctly
+        const authorizedRoles = Array.isArray(roles) ? roles : [roles];
+        if (!authorizedRoles.includes(req.user.role)) { // Assuming req.user has a 'role' field
+            res.status(403); // Forbidden
+            throw new Error(`Not authorized, user role ${req.user.role} does not have access`);
+        }
+        next();
+    };
 };
 
-export { protect, admin };
+
+export { protect, authorize }; 

@@ -37,11 +37,11 @@ export const loginUser = catchAsync(async (req, res) => {
     if (!isMatch) return res.status(400).json({ error: 'Invalid email or password' });
 
     const token = jwt.sign(
-        { userId: user._id, email: user.email },
+        { userId: user._id, email: user.email, role: user.role },
         process.env.JWT_SECRET,
         { expiresIn: '1d' }
     );
-    res.json({ token, user: { name: user.name, email: user.email } });
+    res.json({ token, user: { name: user.name, email: user.email, role: user.role } });
 });
 
 // Forgot Password

@@ -15,28 +15,37 @@ export default function LoginPage() {
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  console.log('Form submitted:', formData); // Log the form data
-  try {
-    const response = await axiosInstance.post('auth/login', formData);
+    console.log('Form submitted:', formData); // Log the form data
+    try {
+      const response = await axiosInstance.post('auth/login', formData);
 
-    console.log('Response:', response.data);  // Log the entire response
+      // --- CRITICAL DEBUGGING STEP HERE ---
+      // This will log the entire data object received from your backend
+      console.log('Full Login API Response Data:', response.data); 
+      // --- END CRITICAL DEBUGGING STEP ---
 
-    if (response.data.token) {
-      // Store the token in localStorage
-      localStorage.setItem('token', response.data.token);
-      login(response.data.user, response.data.token); // Assuming user is in response.data.user
-    } else {
-      console.error('Token not found in the response');
+      // Ensure response.data.token exists before proceeding
+      if (response.data.token) {
+        // The 'login' context function expects the user data object and the token.
+        // Assuming your backend sends the user object as 'response.data.user'
+        // and the token as 'response.data.token'.
+        login(response.data.user, response.data.token); 
+        
+        console.log('Login successful, navigating to /vacant-shops');
+        navigate('/vacant-shops'); // Changed to vacant-shops as per your desired flow
+      } else {
+        // If the backend returns 200 OK but no token, something is wrong with backend response structure
+        console.error('Token not found in the response, even though status was 200 OK.');
+        setError('Login failed: Invalid server response.');
+      }
+
+    } catch (err) {
+      console.error('Login error:', err.response?.data || err.message); // Log full error details
+      setError(err.response?.data?.message || 'Login failed: An unexpected error occurred.');
     }
-
-    navigate('/tenants');
-  } catch (err) {
-    setError(err.response?.data?.error || 'Login failed');
-  }
-};
-
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center relative bg-white isolate px-6 py-12 lg:px-8">
